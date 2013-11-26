@@ -4,16 +4,16 @@
 <title xml:lang="ko">리퍼러 기록 Plus</title>
 <title xml:lang="ja">リファラ統計 Plus</title>
 <link>http://lael.be/249</link>
-<version>1.8.5</version>
+<version>1.9</version>
 <description xml:lang="en">Referer log Plugin using Textcube Components.</description>
 <description xml:lang="ko">텍스트큐브 컴포넌트를 이용하여 리퍼러 기록을 보여줍니다. 검색어도 보여줍니다.</description>
 <description xml:lang="ja">テト・ツールズのコンポーネントを利用して、詳細なリファラ情報を見せます。</description>
-<license>GPL</license>
+<license>MIT</license>
 <author xml:lang="en" link="http://lael.be/249">Lael Rukius</author>
 <author xml:lang="ko" link="http://lael.be/249">Lael Rukius</author>
 <safety changeData="no" exposeData="no" accessLocal="no" accessRemote="no" accessRaw="yes" />
 <requirements>
-<textcube>1.5</textcube>
+<textcube>1.7</textcube>
 </requirements>
 	<binding>
 		<listener event="AddingRefererLog" handler="AddingRefererLog_Plus" />
