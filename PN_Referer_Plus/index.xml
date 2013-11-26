@@ -49,6 +49,24 @@
 					</param>
 					</params>
 				</method>
+				<method>
+					<topMenu>center</topMenu>
+					<contentMenuOrder>4</contentMenuOrder>
+					<title xml:lang="ko">인기 게시글 Plus</title>
+					<handler>PN_Referer_Statistic</handler>
+					<params>
+					<param>
+						<name>page</name>
+						<type>int</type>
+						<default>1</default>
+					</param>
+					<param>
+						<name>perPage</name>
+						<type>int</type>
+						<mandatory>0</mandatory>
+					</param>
+					</params>
+				</method>
 			</viewMethods>
 		</adminMenu>
 	</binding>

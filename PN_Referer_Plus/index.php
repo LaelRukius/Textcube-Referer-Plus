@@ -46,7 +46,12 @@ function AddingRefererLog_Plus(){
 	$url_long = addslashes($url_long);
 
 	POD::query("INSERT INTO `{$database['prefix']}RefererLogs_Plus` values('{$blogid}', UNIX_TIMESTAMP(), '{$pageId}', '{$pageTitle}', '{$url_long}')");
-	POD::query("DELETE FROM `{$database['prefix']}RefererLogs_Plus` WHERE `referred` < UNIX_TIMESTAMP() - 604800");	//delete
+
+	$hit_probability = rand(1,10);
+	if($hit_probability > 8){ //You can chage this value if you want. [Range : 1-9]
+		//로그 자동삭제를 넣었었으나 슈퍼파워블로그가 아닌이상 정리안해도 문제 없을거라고 생각하여 주석처리.
+		//POD::query("DELETE FROM `{$database['prefix']}RefererLogs_Plus` WHERE `referred` < UNIX_TIMESTAMP() - 604800");	//DELETE 가 WHERE 절을 타면서 일시적 LOCK이 발생할 수 있다. 따라서 확률적 실행.
+	}
 
 	return true;
 }
@@ -55,6 +60,94 @@ function utf8_urldecode($str, $chr_set='CP949') {
 	$callback_function = create_function('$matches, $chr_set="'.$chr_set.'"', 'return iconv("UTF-16BE", $chr_set, pack("n*", hexdec($matches[1])));');
 	return rawurldecode(preg_replace_callback('/%u([[:alnum:]]{4})/', $callback_function, $str));
 }
+
+function PN_Referer_Statistic()
+{
+	global $pluginMenuURL, $pluginSelfParam, $blogURL, $configVal,$database;
+
+	if (($_SERVER['REQUEST_METHOD'] == 'POST') && isset($_POST['page']))
+		$_GET['page'] = $_POST['page'];
+
+	$page = Setting::getBlogSetting('RowsPerPageReferer',20);
+	if (empty($_POST['perPage'])) {
+		$perPage = $page;
+	} else if ($page != $_POST['perPage']) {
+		Setting::setBlogSetting('RowsPerPageReferer',$_POST['perPage']);
+		$perPage = $_POST['perPage'];
+	} else {
+		$perPage = $_POST['perPage'];
+	}
+
+
+?>
+						<form id="part-statistics" class="part" method="post" action="<?php echo $pluginMenuURL;?>">
+							<h2 class="caption"><span class="main-text"><?php echo _t("인기 게시글");?></span></h2>
+
+							<table class="data-inbox" cellspacing="0" cellpadding="0" border="0">
+								<thead>
+									<tr>
+										<th width="80" class="number"><span class="text"><?php echo _t("글번호");?></span></th>
+										<th class="site"><span class="text"><?php echo _t("글제목");?></span></th>
+										<th class="entryid"><span class="text"><?php echo _t("유입횟수");?></span></th>
+									</tr>
+								</thead>
+								<tbody>
+								<?php
+									$record_statistic = mysql_query($sql="SELECT `entryid`, `entrytitle`, COUNT(*) AS `cnt` FROM `{$database['prefix']}RefererLogs_Plus` WHERE `entryid` <> '0' GROUP BY `entryid`, `entrytitle` ORDER BY `cnt` DESC, `entryid` DESC LIMIT 0, $perPage");
+
+									while($row = mysql_fetch_array($record_statistic)){
+								?>
+									<tr class="inactive-class" onmouseover="rolloverClass(this, 'over')" onmouseout="rolloverClass(this, 'out')">
+										<td class="date"><?php echo '<a href="'. $blogURL .'/'. $row['entryid'] .'" title="'. htmlspecialchars($row['entrytitle']) .'" onclick="window.open(this.href);return false;">'. $row['entryid'] .'</a>';	?></td>
+										<td class="entryid"><?php echo '<a href="'. $blogURL .'/'. $row['entryid'] .'" title="'. htmlspecialchars($row['entrytitle']) .'" onclick="window.open(this.href);return false;">'.htmlspecialchars($row['entrytitle']).'</a>';	?></td>
+										<td class="entryid"><?php echo $row['cnt'];	?></td>
+									</tr>
+								<?php
+									}
+								?>
+								</tbody>
+							</table>
+
+							<div class="data-subbox">
+								<div id="page-section" class="section">
+									<div id="page-navigation">
+										<span id="page-list">
+<?php
+	$paging['prefix'] = $pluginSelfParam . '&page=';
+	$pagingTemplate = '[##_paging_rep_##]';
+	$pagingItemTemplate = '<a [##_paging_rep_link_##]>[[##_paging_rep_link_num_##]]</a>';
+	echo str_repeat("\t", 8).Paging::getPagingView($paging, $pagingTemplate, $pagingItemTemplate).CRLF;
+?>
+										</span>
+									</div>
+									<div class="page-count">
+										<?php echo Misc::getArrayValue(explode('%1', '한 페이지에 목록 %1건 표시'), 0);?>
+										<select name="perPage" onchange="document.getElementById('part-statistics').submit()">
+<?php
+	for ($i = 10; $i <= 30; $i += 5) {
+		if ($i == $perPage) {
+?>
+											<option value="<?php echo $i;?>" selected="selected"><?php echo $i;?></option>
+<?php
+		} else {
+?>
+											<option value="<?php echo $i;?>"><?php echo $i;?></option>
+<?php
+		}
+	}
+?>
+										</select>
+										<?php echo Misc::getArrayValue(explode('%1', '한 페이지에 목록 %1건 표시'), 1);?>
+									</div>
+								</div>
+							</div>
+						</form>
+
+<?php
+
+}
+
+
 
 function PN_Referer_Default()
 {
@@ -122,6 +215,7 @@ function PN_Referer_Default()
 									<tr>
 										<th width="80" class="number"><span class="text"><?php echo _t("날짜");?></span></th>
 										<th class="entryid"><span class="text">#</span></th>
+										<th class="entryid"><span class="text"><?php echo _t("유입횟수");?></span></th>
 										<th class="site"><span class="text"><?php echo _t("주소");?></span></th>
 										<th class="searchterm"><span class="text"><?php echo _t("검색어");?></span></th>
 										<th class="searchengine"><span class="text"><?php echo _t("검색엔진");?></span></th>
@@ -137,10 +231,13 @@ function PN_Referer_Default()
 		"Naver Blog"			=> "http:\/\/blog.naver.com\/.*[\?&]topReferer\=([^&]*).*"
 	);
 	$surl_arr = array(
-		"Google"				=> "http:\/\/www\.google\..*[\?&]q\=([^&]*).*",
+		"Google2"			=> "www\.google\..*\/url",
+		"Google3"				=> "www\.google\..*[\?&]q\=([^&]*).*",
+		"Google1"				=> "www\.google\..*",
 		"Nate"					=> ".*[\.\/]nate\.com.*[\?&]q\=([^&]*).*",
 		"Yahoo"					=> ".*[\.\/]search\.yahoo\.com\/.*[\?&]p\=([^&]*).*",
-		"Daum"					=> ".*[\.\/]search\.daum\.net.*[\?&]q\=([^&]*).*",
+		"Daum2"					=> ".*[\.\/]search\.daum\.net.*[\?&]q\=([^&]*).*",
+		"Daum1"					=> ".*[\.\/]search\.daum\.net.*",
 		"Naver"					=> ".*[\.\/](?:search|cafe)\.naver\.com.*[\?&]query\=([^&]*).*",
 		"Bing"					=> "http:\/\/www\.bing\.com.*[\?&]q\=([^&]*).*",
 		"MetaCrawler"			=> "http:\/\/www\.metacrawler\.com\/search\/.*[\?&]q\=([^&]*).*",
@@ -191,16 +288,18 @@ function PN_Referer_Default()
 				$searchterm = urldecode($searchterm);
 
 				// EUC-KR이면 UTF-8로 변환
-				$iconved = false;
-				if ($searchterm == iconv("EUC-KR", "EUC-KR", $searchterm)) {
-					$searchterm =  iconv("EUC-KR", "UTF-8" , $searchterm);
-					$iconved = true;
-				}
 
 				// 검색엔진별 예외 처리
 				switch ($searchengine)
 				{
 					case 'Naver':
+
+						$iconved = false;
+						if ($searchterm == iconv("EUC-KR", "EUC-KR", $searchterm)) {
+							$searchterm =  iconv("EUC-KR", "UTF-8" , $searchterm);
+							$iconved = true;
+						}
+
 						// unicode로 된 경우도 있어서 필요
 						$searchterm = utf8_urldecode($searchterm);
 
@@ -216,15 +315,27 @@ function PN_Referer_Default()
 				}
 
 				$searchterm = htmlspecialchars(trim($searchterm));
+				break;
 			}
 		}
 
 		$record['entryid'] = ($record['entryid']=='0')?'':$record['entryid'];
+
+
+		$referredCount = 0;
+
+		$record_cnt = '';
+		if($searchengine==''){
+			$record_cnt = POD::queryCell($sql="SELECT COUNT(*) FROM `{$database['prefix']}RefererLogs_Plus` WHERE `url` = '{$record['url']}' ");
+		}
+		
+
 ?>
 									<tr class="<?php echo $className;?> inactive-class" onmouseover="rolloverClass(this, 'over')" onmouseout="rolloverClass(this, 'out')">
 										<td class="date"><?php echo Timestamp::formatDate($record['referred']);?></td>
 										<td class="entryid"><?php echo '<a href="'. $blogURL .'/'. $record['entryid'] .'" title="'. htmlspecialchars($record['entrytitle']) .'" onclick="window.open(this.href);return false;">'. $record['entryid'] .'</a>';	?></td>
-										<td class="address"><a href="<?php echo Misc::escapeJSInAttribute($record['url']);?>" onclick="window.open(<?php echo $hide_referer_prefix; ?>this.href); return false;" title="<?php echo htmlspecialchars($record['url']);?>"><?php echo fireEvent('ViewRefererURL', htmlspecialchars(UTF8::lessenAsEm($record['url'], 30)), $record);?></a></td>
+										<td class="entryid"><?php echo $record_cnt;	?></td>
+										<td class="address"><a href="<?php echo Misc::escapeJSInAttribute($record['url']);?>" onclick="window.open(<?php echo $hide_referer_prefix; ?>this.href); return false;" title="<?php echo htmlspecialchars($record['url']);?>"><?php echo fireEvent('ViewRefererURL', htmlspecialchars(UTF8::lessenAsEm($record['url'], 50)), $record);?></a></td>
 										<td class="searchterm"><a href="<?php echo Misc::escapeJSInAttribute($searchurl);?>" onclick="window.open(<?php echo $hide_referer_prefix; ?>this.href); return false;" title="Search in <?php echo $searchengine;?>"><?php echo $searchterm?></a></td>
 										<td class="searchengine"><?php echo $searchengine?></td>
 									</tr>
