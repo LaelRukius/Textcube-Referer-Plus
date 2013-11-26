@@ -36,6 +36,7 @@ function AddingRefererLog_Plus(){
 	$url_long = POD::escapeString(UTF8::lessenAsEncoding($_SERVER['HTTP_REFERER'], 1024)); //지나치게 긴 리퍼러는 필요없다.
 
 	$pageId = 0;
+	$pageTitle = '';
 	if (!empty($entries) && (count($entries) == 1)){
 		$pageId = $entries[0]['id'];
 		$pageTitle = $entries[0]['title'];
@@ -119,11 +120,11 @@ function PN_Referer_Default()
 							<table class="data-inbox" cellspacing="0" cellpadding="0" border="0">
 								<thead>
 									<tr>
-										<th width="80" class="number"><span class="text">날짜</span></th>
+										<th width="80" class="number"><span class="text"><?php echo _t("날짜");?></span></th>
 										<th class="entryid"><span class="text">#</span></th>
-										<th class="site"><span class="text">주소</span></th>
-										<th class="searchterm"><span class="text">검색어</span></th>
-										<th class="searchengine"><span class="text">검색엔진</span></th>
+										<th class="site"><span class="text"><?php echo _t("주소");?></span></th>
+										<th class="searchterm"><span class="text"><?php echo _t("검색어");?></span></th>
+										<th class="searchengine"><span class="text"><?php echo _t("검색엔진");?></span></th>
 									</tr>
 								</thead>
 								<tbody>
@@ -224,7 +225,7 @@ function PN_Referer_Default()
 										<td class="date"><?php echo Timestamp::formatDate($record['referred']);?></td>
 										<td class="entryid"><?php echo '<a href="'. $blogURL .'/'. $record['entryid'] .'" title="'. htmlspecialchars($record['entrytitle']) .'" onclick="window.open(this.href);return false;">'. $record['entryid'] .'</a>';	?></td>
 										<td class="address"><a href="<?php echo Misc::escapeJSInAttribute($record['url']);?>" onclick="window.open(<?php echo $hide_referer_prefix; ?>this.href); return false;" title="<?php echo htmlspecialchars($record['url']);?>"><?php echo fireEvent('ViewRefererURL', htmlspecialchars(UTF8::lessenAsEm($record['url'], 30)), $record);?></a></td>
-										<td class="searchterm"><a href="<?php echo Misc::escapeJSInAttribute($searchurl);?>" onclick="window.open(<?php echo $hide_referer_prefix; ?>this.href); return false;" title="<?php echo $searchengine;?>에서 검색하기"><?php echo $searchterm?></a></td>
+										<td class="searchterm"><a href="<?php echo Misc::escapeJSInAttribute($searchurl);?>" onclick="window.open(<?php echo $hide_referer_prefix; ?>this.href); return false;" title="Search in <?php echo $searchengine;?>"><?php echo $searchterm?></a></td>
 										<td class="searchengine"><?php echo $searchengine?></td>
 									</tr>
 <?php
