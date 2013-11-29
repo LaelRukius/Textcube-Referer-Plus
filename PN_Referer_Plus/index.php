@@ -239,6 +239,8 @@ function PN_Referer_Default()
 		"Daum2"					=> ".*[\.\/]search\.daum\.net.*[\?&]q\=([^&]*).*",
 		"Daum1"					=> ".*[\.\/]search\.daum\.net.*",
 		"Naver"					=> ".*[\.\/](?:search|cafe)\.naver\.com.*[\?&]query\=([^&]*).*",
+		"NaverCafe"					=> ".*[\.\/]cafe\.naver\.com.*",
+		"NaverBlog"					=> ".*[\.\/]blog\.naver\.com.*",
 		"Bing"					=> "http:\/\/www\.bing\.com.*[\?&]q\=([^&]*).*",
 		"MetaCrawler"			=> "http:\/\/www\.metacrawler\.com\/search\/.*[\?&]q\=([^&]*).*",
 		"Netpia"				=> "http:\/\/find\.netpia\.com\/nlia\/lookup\.phtml?.*[\?&]q\=([^&]*).*",
